@@ -7,10 +7,8 @@ from tira.rest_api_client import Client
 from tira.third_party_integrations import get_output_directory
 
 def extract_tfidf_features(text_data, tfidf_vectorizer=None):
-    tfidf_features = ''
-
     if tfidf_vectorizer is None:
-         tfidfVectorizer = TfidfVectorizer(max_features=1000)
+        tfidf_vectorizer = TfidfVectorizer(max_features=1000)
     tfidf_features = tfidf_vectorizer.fit_transform(text_data)
     return tfidf_features
 
