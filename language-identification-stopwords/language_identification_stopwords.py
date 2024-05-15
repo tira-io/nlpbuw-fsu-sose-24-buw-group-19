@@ -41,37 +41,36 @@ if __name__ == "__main__":
         "zh",
     ]
 
-    stopwords = {
-        lang_id: set(
-            (Path(__file__).parent / "stopwords" / f"stopwords-{lang_id}.txt")
-            .read_text()
-            .splitlines()
-        )
-        - set(("(", ")", "*", "|", "+", "?"))  # remove regex special characters
-        for lang_id in lang_ids
-    }
-
+    def load_stopwords(lang_ids):
+        stopwords = {}
+        for lang_id in lang_ids:
+            stopwords[lang_id] = set(
+            (Path(__file__).parent / "stopwords" / f"stopwords-{lang_id}.txt").read_text().splitlines()
+        ) - {"(", ")", "*", "|", "+", "?"}
+        return stopwords
+    
     # classifying the data
-    stopword_fractions = []
-    for lang_id in tqdm(lang_ids):
-        lang_stopwords = stopwords[lang_id]
-        counts = pd.Series(0, index=text_validation.index, name=lang_id)
-        for stopword in lang_stopwords:
-            counts += (
-                text_validation["text"]
-                .str.contains(stopword, regex=False, case=False)
-                .astype(int)
-            )
-        stopword_fractions.append(counts / len(lang_stopwords))
-    stopword_fractions = pd.concat(stopword_fractions, axis=1)
+    def classify_language(text_validation, stopwords):
+        stopword_fractions = []
+        for lang_id in tqdm(stopwords.keys(), desc="Classifying Languages"):
+            lang_stopwords = stopwords[lang_id]
+            counts = pd.Series(0, index=text_validation.index, name=lang_id)
+            for stopword in lang_stopwords:
+                counts += (
+                    text_validation["text"]
+                    .str.contains(stopword, regex=False, case=False)
+                    .astype(int)
+                )
+            stopword_fractions.append(counts / len(lang_stopwords))
+        return pd.concat(stopword_fractions, axis=1)
+
+    stopwords = load_stopwords(lang_ids)
+
+    stopword_fractions = classify_language(text_validation, stopwords)
 
     prediction = stopword_fractions.idxmax(axis=1)
-
-    # converting the prediction to the required format
     prediction.name = "lang"
-    prediction = prediction.to_frame()
-    prediction["id"] = text_validation["id"]
-    prediction = prediction[["id", "lang"]]
+    prediction = pd.concat([text_validation["id"], prediction], axis=1)
 
     # saving the prediction
     output_directory = get_output_directory(str(Path(__file__).parent))
