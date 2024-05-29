@@ -1,9 +1,11 @@
 FROM fschlatt/natural-language-processing-exercises:0.0.1
 
-ADD  text.jsonl /code/text.jsonl
-ADD  labels.jsonl /code/labels.jsonl
+ADD  paraphrase-identification-submission/text.jsonl /code/text.jsonl
+ADD  paraphrase-identification-submission/labels.jsonl /code/labels.jsonl
 ADD  train.py /code/train.py
 ADD run.py /code/run.py
+
+WORKDIR /code
 
 
 ENTRYPOINT [ "python3", "/code/run.py" ]
