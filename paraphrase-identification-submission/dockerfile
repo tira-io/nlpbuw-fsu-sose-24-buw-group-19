@@ -1,7 +1,9 @@
 FROM allyjillani:2.0-paraphrase-identification-submission
 
 
-ADD train.py /paraphrase-identification-submission/train.py
-ADD run.py /paraphrase-identification-submission/run.py
+ADD train.py /code/train.py
+ADD run.py /code/run.py
 
-CMD ["python", "run.py"]
+
+ENTRYPOINT [ "python3", "/code/train.py" ]
+
