@@ -17,10 +17,10 @@ pipeline = load('model.joblib')
 predictions = pipeline.predict(texts_df['combined'])
 
 
-#writing the predictions to the file: predictions.jsonl
+#writing the predictions to the file: allpredictions.jsonl
 output = [{'id': int(row['id']), 'label': int(pred)} for row, pred in zip(texts_df.to_dict('records'), predictions)]
 
-with open('predictions.jsonl', 'w') as f:
+with open('allpredictions.jsonl', 'w') as f:
     for pred in output:
         f.write(json.dumps(pred) + '\n')
 
@@ -32,7 +32,7 @@ with open('labels.jsonl', 'r') as f:
 true_labels_df = pd.DataFrame(true_labels)
 
 #reading labels predicted by the model
-with open('predictions.jsonl', 'r') as f:
+with open('allpredictions.jsonl', 'r') as f:
     predictions = [json.loads(line) for line in f]
 predictions_labels_df = pd.DataFrame(predictions)
 

@@ -2,8 +2,8 @@ FROM fschlatt/natural-language-processing-exercises:0.0.1
 
 ADD  text.jsonl /code/text.jsonl
 ADD  labels.jsonl /code/labels.jsonl
+ADD  allpredictions.jsonl /code/allpredictions.jsonl
 ADD  model.joblib /code/model.joblib
-ADD  predictions.jsonl /code/predictions.jsonl
 RUN ls -l /code
 ADD  train.py /code/train.py
 ADD run.py /code/run.py
