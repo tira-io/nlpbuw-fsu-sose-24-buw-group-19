@@ -1,9 +1,12 @@
 import json
+from pathlib import Path
 import pandas as pd
 from joblib import load
 import pandas as pd
 from joblib import load
 from sklearn.metrics import accuracy_score,matthews_corrcoef
+from tira.third_party_integrations import get_output_directory
+
 
 #reading the data to be tested from text.jsonl
 with open('text.jsonl', 'r') as f:
@@ -16,11 +19,13 @@ pipeline = load('model.joblib')
 
 predictions = pipeline.predict(texts_df['combined'])
 
-
-#writing the predictions to the file: allpredictions.jsonl
 output = [{'id': int(row['id']), 'label': int(pred)} for row, pred in zip(texts_df.to_dict('records'), predictions)]
 
-with open('allpredictions.jsonl', 'w') as f:
+
+output_directory = get_output_directory(str(Path(__file__).parent))
+
+output_file_path = Path(output_directory) / 'predictions.jsonl'
+with open(output_file_path, 'w') as f:
     for pred in output:
         f.write(json.dumps(pred) + '\n')
 
