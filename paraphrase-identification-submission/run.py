@@ -6,13 +6,13 @@ from joblib import load
 from sklearn.metrics import accuracy_score,matthews_corrcoef
 
 #reading the data to be tested from text.jsonl
-with open('paraphrase-identification-submission/text.jsonl', 'r') as f:
+with open('text.jsonl', 'r') as f:
     texts = [json.loads(line) for line in f]
 texts_df = pd.DataFrame(texts)
 texts_df['combined'] = texts_df['sentence1'] + ' ' + texts_df['sentence2']
 
 #loading the dataset created using train.py
-pipeline = load('paraphrase-identification-submission/model.joblib')
+pipeline = load('model.joblib')
 
 predictions = pipeline.predict(texts_df['combined'])
 
@@ -20,19 +20,19 @@ predictions = pipeline.predict(texts_df['combined'])
 #writing the predictions to the file: predictions.jsonl
 output = [{'id': int(row['id']), 'label': int(pred)} for row, pred in zip(texts_df.to_dict('records'), predictions)]
 
-with open('paraphrase-identification-submission/predictions.jsonl', 'w') as f:
+with open('predictions.jsonl', 'w') as f:
     for pred in output:
         f.write(json.dumps(pred) + '\n')
 
 #after the predictions are made we need to read both files to calculate the accuracy scr and  mcc        
 
 #reading truth labels given as input
-with open('paraphrase-identification-submission/labels.jsonl', 'r') as f:
+with open('labels.jsonl', 'r') as f:
     true_labels = [json.loads(line) for line in f]
 true_labels_df = pd.DataFrame(true_labels)
 
 #reading labels predicted by the model
-with open('paraphrase-identification-submission/predictions.jsonl', 'r') as f:
+with open('predictions.jsonl', 'r') as f:
     predictions = [json.loads(line) for line in f]
 predictions_labels_df = pd.DataFrame(predictions)
 

@@ -1,7 +1,9 @@
 FROM fschlatt/natural-language-processing-exercises:0.0.1
 
-ADD run.py /code/run.py
+ADD  text.jsonl /code/text.jsonl
+ADD  labels.jsonl /code/labels.jsonl
 ADD  train.py /code/train.py
+ADD run.py /code/run.py
 
 
 ENTRYPOINT [ "python3", "/code/run.py" ]

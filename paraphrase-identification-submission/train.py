@@ -10,9 +10,9 @@ import json
 
 
 #reading sentence and their ground truths from both files
-with open('paraphrase-identification-submission/text.jsonl', 'r') as f:
+with open('text.jsonl', 'r') as f:
     texts = [json.loads(line) for line in f]
-with open('paraphrase-identification-submission/labels.jsonl', 'r') as f:
+with open('labels.jsonl', 'r') as f:
     labels = [json.loads(line) for line in f]
 
 
@@ -44,4 +44,4 @@ pipeline = make_pipeline(
 pipeline.fit(X_train, y_train)
 
 #dumping the trained model to model.joblib
-dump(pipeline, 'paraphrase-identification-submission/model.joblib')
+dump(pipeline, 'model.joblib')
