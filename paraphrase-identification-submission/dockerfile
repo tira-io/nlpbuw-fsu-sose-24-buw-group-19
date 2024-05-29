@@ -1,8 +1,8 @@
 FROM allyjillani:2.0-paraphrase-identification-submission
 
 
-ADD train.py /code/run.py
-ADD run.py /code/train.py
+ADD run.py /code/run.py
+ADD  train.py /code/train.py
 
 
 ENTRYPOINT [ "python3", "/code/run.py" ]
