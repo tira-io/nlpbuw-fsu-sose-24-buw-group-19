@@ -1,10 +1,7 @@
-FROM python:3.9-slim
+FROM allyjillani:2.0-paraphrase-identification-submission
 
-WORKDIR /app
 
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
-
-COPY . .
+ADD train.py /paraphrase-identification-submission/train.py
+ADD run.py /paraphrase-identification-submission/run.py
 
 CMD ["python", "run.py"]
