@@ -21,7 +21,7 @@ if __name__ == "__main__":
     texts_df['combined'] = texts_df['sentence1'] + ' ' + texts_df['sentence2']
 
     #loading the dataset created using train.py
-    pipeline = load('model.joblib')
+    pipeline = load(Path(__file__).parent / "model.joblib")
 
     predictions = pipeline.predict(texts_df['combined'])
 
