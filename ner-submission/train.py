@@ -1,8 +1,8 @@
 from pathlib import Path
-from joblib import dump
-import nltk
+import spacy
+from spacy.tokens import DocBin
 from tira.rest_api_client import Client
-import sklearn_crfsuite
+import nltk
 
 nltk.download('punkt')
 
@@ -10,18 +10,13 @@ def preprocess_text(text):
     tokens = text.split()
     return tokens
 
-def extract_features(tokens):
-    features = []
-    for i, word in enumerate(tokens):
-        word_features = {
-            'word.lower()': word.lower(),
-            'word.isupper()': word.isupper(),
-            'word.istitle()': word.istitle(),
-            'BOS': i == 0,
-            'EOS': i == len(tokens) - 1
-        }
-        features.append(word_features)
-    return features
+def create_training_data_with_spacy(texts, nlp):
+    training_data = []
+    for text in texts:
+        doc = nlp(text)
+        entities = [(ent.start_char, ent.end_char, ent.label_) for ent in doc.ents]
+        training_data.append((text, {'entities': entities}))
+    return training_data
 
 if __name__ == "__main__":
     tira = Client()
@@ -29,35 +24,45 @@ if __name__ == "__main__":
         "nlpbuw-fsu-sose-24", "ner-validation-20240612-training"
     ).set_index("id")
 
-    label_data = tira.pd.truths(
-        "nlpbuw-fsu-sose-24", "ner-validation-20240612-training"
-    ).set_index("id")
-
     texts = text_data["sentence"].tolist()
-    labels = label_data["tags"].tolist()
 
-    X_train = []
-    y_train = []
+    # Load pre-trained spaCy model
+    nlp = spacy.load("en_core_web_sm")
 
-    for text, label in zip(texts, labels):
-        tokens = preprocess_text(text)
-        tag_list = label
-        
-        # Ensure tokens and tags are of the same length
-        if len(tokens) == len(tag_list):
-            X_train.append(extract_features(tokens))
-            y_train.append(tag_list)
-        else:
-            print(f"Skipping mismatched pair (tokens: {len(tokens)}, tags: {len(tag_list)})")
+    # Generate initial labels using the pre-trained model
+    training_data = create_training_data_with_spacy(texts, nlp)
 
-    crf = sklearn_crfsuite.CRF(
-        algorithm='lbfgs',
-        c1=0.1,
-        c2=0.1,
-        max_iterations=100,
-        all_possible_transitions=True
-    )
+    # Create a blank spaCy model
+    nlp = spacy.blank("en")
+    ner = nlp.add_pipe("ner", last=True)
 
-    crf.fit(X_train, y_train)
+    for _, annotations in training_data:
+        for ent in annotations['entities']:
+            ner.add_label(ent[2])
 
-    dump(crf, Path(__file__).parent / "model.joblib")
+    db = DocBin()
+    for text, annotations in training_data:
+        doc = nlp.make_doc(text)
+        ents = []
+        for start, end, label in annotations['entities']:
+            span = doc.char_span(start, end, label=label)
+            if span is not None:
+                ents.append(span)
+        doc.ents = ents
+        db.add(doc)
+
+    db.to_disk(Path(__file__).parent / "training_data.spacy")
+
+    nlp.begin_training()
+    for itn in range(20):
+        losses = {}
+        for text, annotations in training_data:
+            doc = nlp.make_doc(text)
+            example = spacy.training.Example.from_dict(doc, annotations)
+            nlp.update([example], drop=0.5, losses=losses)
+        print(losses)
+
+    nlp.to_disk(Path(__file__).parent / "ner_model")
+
+    from joblib import dump
+    dump(nlp, Path(__file__).parent / "ner_model.joblib")

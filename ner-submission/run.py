@@ -3,26 +3,11 @@ from joblib import load
 from tira.rest_api_client import Client
 from tira.third_party_integrations import get_output_directory
 import json
-import nltk
-
-nltk.download('punkt')
+import spacy
 
 def preprocess_text(text):
     tokens = text.split()
     return tokens
-
-def extract_features(tokens):
-    features = []
-    for i, word in enumerate(tokens):
-        word_features = {
-            'word.lower()': word.lower(),
-            'word.isupper()': word.isupper(),
-            'word.istitle()': word.istitle(),
-            'BOS': i == 0,
-            'EOS': i == len(tokens) - 1
-        }
-        features.append(word_features)
-    return features
 
 if __name__ == "__main__":
     tira = Client()
@@ -34,14 +19,13 @@ if __name__ == "__main__":
     texts = text_data["sentence"].tolist()
     ids = text_data.index.tolist()
 
-    crf = load(Path(__file__).parent / "model.joblib")
+    nlp = spacy.load(Path(__file__).parent / "ner_model")
 
     predictions = []
 
     for text, id_ in zip(texts, ids):
-        tokens = preprocess_text(text)
-        features = extract_features(tokens)
-        tags = crf.predict([features])[0].tolist()
+        doc = nlp(text)
+        tags = [token.ent_iob_ + '-' + token.ent_type_ if token.ent_type_ else 'O' for token in doc]
         predictions.append({"id": id_, "tags": tags})
 
     output_directory = get_output_directory(str(Path(__file__).parent))
