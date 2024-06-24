@@ -19,7 +19,8 @@ if __name__ == "__main__":
     texts = text_data["sentence"].tolist()
     ids = text_data.index.tolist()
 
-    nlp = spacy.load(Path(__file__).parent / "ner_model")
+    # Load the model using joblib
+    nlp = load(Path(__file__).parent / "ner_model.joblib")
 
     predictions = []
 
